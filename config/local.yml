@@ -1,0 +1,15 @@
+env: "local"
+http_server:
+  address: "localhost:8082"
+  timeout: 4s
+  idle_timeout: 60s
+  user: "myuser"
+  password: "mypassword"
+logger:
+  level: 0 # 0 - debug, 1 - info, 2 - warn, 3 - error, 4 - fatal, 5 - panic
+  format: "console" # console или json
+db:
+  dsn: "host=localhost user=postgres password=postgres dbname=url_shortener port=5432 sslmode=disable TimeZone=UTC"
+cors:
+  allowed_origins:
+    - "*"

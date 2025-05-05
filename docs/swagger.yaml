@@ -1,0 +1,265 @@
+basePath: /
+definitions:
+  link.GetAllLinksResponse:
+    properties:
+      limit:
+        description: Links per page limit
+        example: 10
+        type: integer
+      links:
+        description: List of links
+        items:
+          $ref: '#/definitions/link.Link'
+        type: array
+      page:
+        description: Current page
+        example: 1
+        type: integer
+      total_links:
+        description: Total number of links
+        example: 42
+        type: integer
+      total_pages:
+        description: Total number of pages
+        example: 5
+        type: integer
+    type: object
+  link.Link:
+    description: Shortened link model
+    properties:
+      created_at:
+        example: "2025-04-23T00:00:00Z"
+        type: string
+      deleted_at:
+        format: date-time
+        type: string
+      hash:
+        example: abc123
+        type: string
+      id:
+        example: 1
+        type: integer
+      lifetime:
+        example: 90
+        type: integer
+      number_of_clicks:
+        example: 42
+        type: integer
+      updated_at:
+        example: "2025-04-23T00:00:00Z"
+        type: string
+      url:
+        example: https://example.com
+        type: string
+      user_id:
+        example: 123e4567-e89b-12d3-a456-426614174000
+        type: string
+    type: object
+  link.LinkCreateRequest:
+    properties:
+      hash:
+        description: Custom hash (optional)
+        example: custom123
+        type: string
+      url:
+        description: Original URL to shorten
+        example: https://example.com
+        type: string
+      user_id:
+        description: User ID (optional)
+        example: 123e4567-e89b-12d3-a456-426614174000
+        type: string
+    required:
+    - url
+    type: object
+  link.LinkDeleteRequest:
+    properties:
+      hash:
+        description: Hash of the link to delete
+        example: abc123
+        type: string
+      user_id:
+        description: ID of the user who owns the link
+        example: 123e4567-e89b-12d3-a456-426614174000
+        type: string
+    required:
+    - hash
+    - user_id
+    type: object
+info:
+  contact: {}
+  description: API for shortening URLs and managing shortened links
+  title: URL Shortener API
+  version: "2.0"
+paths:
+  /{hash}:
+    get:
+      description: Redirects to the original URL using the provided hash
+      parameters:
+      - description: Hash of the shortened link
+        in: path
+        name: hash
+        required: true
+        type: string
+      produces:
+      - text/html
+      responses:
+        "302":
+          description: Redirect to the original URL
+          schema:
+            type: string
+        "400":
+          description: Hash parameter is missing
+          schema:
+            type: string
+        "404":
+          description: Link not found
+          schema:
+            type: string
+      summary: Redirect to original URL
+      tags:
+      - links
+  /api/v1/links:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes a shortened link by hash
+      parameters:
+      - description: Data for deleting a link
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/link.LinkDeleteRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Link deleted successfully
+          schema:
+            type: string
+        "400":
+          description: Error in request parameters
+          schema:
+            type: string
+        "403":
+          description: Link not found or user does not have permission
+          schema:
+            type: string
+        "404":
+          description: Link not found
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Delete a shortened link
+      tags:
+      - links
+    get:
+      description: Get details of a specific shortened link by hash
+      parameters:
+      - description: User ID of the link owner
+        in: query
+        name: user_id
+        required: true
+        type: string
+      - description: Hash of the shortened link
+        in: query
+        name: hash
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Link details
+          schema:
+            $ref: '#/definitions/link.Link'
+        "400":
+          description: Missing parameters
+          schema:
+            type: string
+        "403":
+          description: Link not found or user does not have access
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Get link details
+      tags:
+      - links
+    post:
+      consumes:
+      - application/json
+      description: Creates a new shortened link
+      parameters:
+      - description: Data for creating a link
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/link.LinkCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created link
+          schema:
+            $ref: '#/definitions/link.Link'
+        "400":
+          description: Error in request parameters
+          schema:
+            type: string
+        "404":
+          description: User ID not found
+          schema:
+            type: string
+        "409":
+          description: Hash already exists
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Create a new shortened link
+      tags:
+      - links
+  /api/v1/links/all:
+    get:
+      description: Get a list of all links belonging to a user
+      parameters:
+      - description: User ID
+        in: query
+        name: user_id
+        required: true
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Number of items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of links
+          schema:
+            $ref: '#/definitions/link.GetAllLinksResponse'
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Get all user links
+      tags:
+      - links
+swagger: "2.0"
