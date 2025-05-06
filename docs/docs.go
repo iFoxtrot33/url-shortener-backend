@@ -181,6 +181,59 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/links/add-days": {
+            "post": {
+                "description": "Increases the lifetime of all links belonging to a user by 1 day",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "links"
+                ],
+                "summary": "Add days to all user links",
+                "parameters": [
+                    {
+                        "description": "User ID",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/link.AddDaysRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success message with number of updated links",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Error in request parameters",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/links/all": {
             "get": {
                 "description": "Get a list of all links belonging to a user",
@@ -273,33 +326,40 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "link.AddDaysRequest": {
+            "type": "object",
+            "required": [
+                "user_id"
+            ],
+            "properties": {
+                "user_id": {
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
+                }
+            }
+        },
         "link.GetAllLinksResponse": {
             "type": "object",
             "properties": {
                 "limit": {
-                    "description": "Links per page limit",
                     "type": "integer",
                     "example": 10
                 },
                 "links": {
-                    "description": "List of links",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/link.Link"
                     }
                 },
                 "page": {
-                    "description": "Current page",
                     "type": "integer",
                     "example": 1
                 },
                 "total_links": {
-                    "description": "Total number of links",
                     "type": "integer",
                     "example": 42
                 },
                 "total_pages": {
-                    "description": "Total number of pages",
                     "type": "integer",
                     "example": 5
                 }
@@ -354,17 +414,14 @@ const docTemplate = `{
             ],
             "properties": {
                 "hash": {
-                    "description": "Custom hash (optional)",
                     "type": "string",
                     "example": "custom123"
                 },
                 "url": {
-                    "description": "Original URL to shorten",
                     "type": "string",
                     "example": "https://example.com"
                 },
                 "user_id": {
-                    "description": "User ID (optional)",
                     "type": "string",
                     "example": "123e4567-e89b-12d3-a456-426614174000"
                 }
@@ -378,12 +435,10 @@ const docTemplate = `{
             ],
             "properties": {
                 "hash": {
-                    "description": "Hash of the link to delete",
                     "type": "string",
                     "example": "abc123"
                 },
                 "user_id": {
-                    "description": "ID of the user who owns the link",
                     "type": "string",
                     "example": "123e4567-e89b-12d3-a456-426614174000"
                 }

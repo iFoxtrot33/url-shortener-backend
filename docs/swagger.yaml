@@ -1,26 +1,29 @@
 basePath: /
 definitions:
+  link.AddDaysRequest:
+    properties:
+      user_id:
+        example: 123e4567-e89b-12d3-a456-426614174000
+        type: string
+    required:
+    - user_id
+    type: object
   link.GetAllLinksResponse:
     properties:
       limit:
-        description: Links per page limit
         example: 10
         type: integer
       links:
-        description: List of links
         items:
           $ref: '#/definitions/link.Link'
         type: array
       page:
-        description: Current page
         example: 1
         type: integer
       total_links:
-        description: Total number of links
         example: 42
         type: integer
       total_pages:
-        description: Total number of pages
         example: 5
         type: integer
     type: object
@@ -58,15 +61,12 @@ definitions:
   link.LinkCreateRequest:
     properties:
       hash:
-        description: Custom hash (optional)
         example: custom123
         type: string
       url:
-        description: Original URL to shorten
         example: https://example.com
         type: string
       user_id:
-        description: User ID (optional)
         example: 123e4567-e89b-12d3-a456-426614174000
         type: string
     required:
@@ -75,11 +75,9 @@ definitions:
   link.LinkDeleteRequest:
     properties:
       hash:
-        description: Hash of the link to delete
         example: abc123
         type: string
       user_id:
-        description: ID of the user who owns the link
         example: 123e4567-e89b-12d3-a456-426614174000
         type: string
     required:
@@ -227,6 +225,41 @@ paths:
           schema:
             type: string
       summary: Create a new shortened link
+      tags:
+      - links
+  /api/v1/links/add-days:
+    post:
+      consumes:
+      - application/json
+      description: Increases the lifetime of all links belonging to a user by 1 day
+      parameters:
+      - description: User ID
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/link.AddDaysRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success message with number of updated links
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Error in request parameters
+          schema:
+            type: string
+        "404":
+          description: User not found
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Add days to all user links
       tags:
       - links
   /api/v1/links/all:

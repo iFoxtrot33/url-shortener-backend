@@ -36,6 +36,8 @@ func NewLinkHandler(router *http.ServeMux, deps *LinkHandlerDeps) {
 	router.HandleFunc("GET /api/v1/links/all", handler.GetAllLinks())
 	router.HandleFunc("POST /api/v1/links", handler.CreateLink())
 	router.HandleFunc("DELETE /api/v1/links", handler.DeleteLink())
+
+	router.HandleFunc("POST /api/v1/links/add-days", handler.AddDays())
 }
 
 // Redirect godoc
@@ -369,5 +371,58 @@ func (handler *LinkHandler) DeleteLink() http.HandlerFunc {
 			Msg("Link deleted successfully")
 
 		res.Json(w, "Link deleted successfully", http.StatusOK)
+	}
+}
+
+// AddDays godoc
+// @Summary Add days to all user links
+// @Description Increases the lifetime of all links belonging to a user by 1 day
+// @Tags links
+// @Accept json
+// @Produce json
+// @Param payload body AddDaysRequest true "User ID"
+// @Success 200 {object} map[string]interface{} "Success message with number of updated links"
+// @Failure 400 {string} string "Error in request parameters"
+// @Failure 404 {string} string "User not found"
+// @Failure 500 {string} string "Internal server error"
+// @Router /api/v1/links/add-days [post]
+func (handler *LinkHandler) AddDays() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		payload, err := req.HandleBody[AddDaysRequest](&w, r)
+		if err != nil {
+			handler.Logger.Error().Err(err).Msg("Failed to process add days request")
+			return
+		}
+
+		updatedCount, err := handler.LinkRepository.AddDaysToAllUserLinks(payload.UserId)
+		if err != nil {
+			if err.Error() == "user not found" {
+				handler.Logger.Error().
+					Err(err).
+					Str("user_id", payload.UserId).
+					Msg("User not found")
+				res.Json(w, "User not found", http.StatusNotFound)
+				return
+			}
+
+			handler.Logger.Error().
+				Err(err).
+				Str("user_id", payload.UserId).
+				Msg("Failed to add days to user links")
+			res.Json(w, "Failed to add days to user links", http.StatusInternalServerError)
+			return
+		}
+
+		handler.Logger.Info().
+			Str("user_id", payload.UserId).
+			Int64("updated_links", updatedCount).
+			Msg("Successfully added days to user links")
+
+		response := map[string]interface{}{
+			"message":       "Successfully added days to user links",
+			"updated_links": updatedCount,
+		}
+
+		res.Json(w, response, http.StatusOK)
 	}
 }

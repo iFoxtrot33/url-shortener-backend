@@ -257,3 +257,22 @@ func (repo *LinkRepository) CheckUserMatchesLink(hash, userId string) (bool, err
 
 	return true, nil
 }
+
+func (repo *LinkRepository) AddDaysToAllUserLinks(userId string) (int64, error) {
+
+	exists, err := repo.CheckUserExists(userId)
+	if err != nil {
+		return 0, fmt.Errorf("error checking user existence: %w", err)
+	}
+
+	if !exists {
+		return 0, errors.New("user not found")
+	}
+
+	result := repo.Database.DB.Exec("UPDATE links SET lifetime = lifetime + 1 WHERE user_id = ? AND deleted_at IS NULL", userId)
+	if result.Error != nil {
+		return 0, fmt.Errorf("error updating links lifetime: %w", result.Error)
+	}
+
+	return result.RowsAffected, nil
+}
